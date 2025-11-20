@@ -1,6 +1,4 @@
 /**
- * Copyright 2025 Google LLC
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import cleanup from 'rollup-plugin-cleanup';
 import license from 'rollup-plugin-license';
 import prettier from 'rollup-plugin-prettier';
