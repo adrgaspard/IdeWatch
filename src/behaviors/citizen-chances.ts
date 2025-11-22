@@ -13,51 +13,27 @@
  */
 import { CitizenBaseStats, CitizenContext } from "../models/citizens";
 import { Jobs as JobsModifiers } from "../models/jobs";
-import {
-  applyStatModifier,
-  applyStatMultiplier,
-  CitizenStats,
-} from "../models/stats";
-import {
-  SLevelSurvivalMalusEvolutions,
-  SLevelModifiers,
-} from "../models/super";
-import {
-  getBuildingsModifier,
-  getPandemoniumModifier,
-  getSmallTrebuchetMultiplier,
-  TownContext,
-} from "../models/town";
-import {
-  getPreviousBathsModifier,
-  getShowerActionModifier,
-} from "../models/baths-and-shower";
+import { applyStatModifier, applyStatMultiplier, CitizenStats } from "../models/stats";
+import { SLevelSurvivalMalusEvolutions, SLevelModifiers } from "../models/super";
+import { getBuildingsModifier, getPandemoniumModifier, getSmallTrebuchetMultiplier, TownContext } from "../models/town";
+import { getPreviousBathsModifier, getShowerActionModifier } from "../models/baths-and-shower";
 import { getPreviousWatchesModifier } from "../models/super";
 import { getBaseTerrorAndWoundModifier } from "../models/terror-and-wound";
-import { roundTo } from "../utils";
+import { roundTo } from "../utils/general";
 import { StatusModifiers } from "../models/statuses";
 import { getItemModifier } from "../models/items";
 
-export function getCitizenStats(
-  town: TownContext,
-  citizen: CitizenContext
-): CitizenStats {
+export function getCitizenStats(town: TownContext, citizen: CitizenContext): CitizenStats {
   let stats: CitizenStats = { ...CitizenBaseStats };
 
   // Step 1 : Apply job modifier
   stats = applyStatModifier(stats, JobsModifiers[citizen.job]);
 
   // Step 2 : Apply previous watches modifier
-  stats = applyStatModifier(
-    stats,
-    getPreviousWatchesModifier(citizen.previousWatchDays.length, citizen.sLevel)
-  );
+  stats = applyStatModifier(stats, getPreviousWatchesModifier(citizen.previousWatchDays.length, citizen.sLevel));
 
   // Step 3 : Apply base terror and wound modifier
-  stats = applyStatModifier(
-    stats,
-    getBaseTerrorAndWoundModifier(stats.survival, town.pandemonium)
-  );
+  stats = applyStatModifier(stats, getBaseTerrorAndWoundModifier(stats.survival, town.pandemonium));
 
   // Step 4 : Apply previous baths modifier
   stats = applyStatModifier(
@@ -83,16 +59,10 @@ export function getCitizenStats(
   stats = applyStatModifier(stats, getBuildingsModifier(town));
 
   // Step 8 : Apply shower action modifier
-  stats = applyStatModifier(
-    stats,
-    getShowerActionModifier(citizen.tookShowerToday)
-  );
+  stats = applyStatModifier(stats, getShowerActionModifier(citizen.tookShowerToday));
 
   // Step 9 : Apply pandemonium modifier
-  stats = applyStatModifier(
-    stats,
-    getPandemoniumModifier(town, stats.survival)
-  );
+  stats = applyStatModifier(stats, getPandemoniumModifier(town, stats.survival));
 
   // Step 10 : Apply super level modifier
   stats = applyStatModifier(stats, SLevelModifiers[citizen.sLevel]);

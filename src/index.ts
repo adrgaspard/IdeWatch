@@ -13,6 +13,24 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { hello } from "./example-module";
 
-console.log(hello());
+import "./parsers/citizen-parser";
+import { lineInputToCitizenBaseData } from "./parsers/citizen-parser";
+import { columnInputToTownBaseData } from "./parsers/town-parser";
+import { MatrixInput } from "./utils/parsing";
+
+function IdeWatch_checkCitizenBaseData(line: MatrixInput) {
+  lineInputToCitizenBaseData(line);
+  return "OK";
+}
+
+function IdeWatch_checkTownBaseData(column: MatrixInput) {
+  columnInputToTownBaseData(column);
+  return "OK";
+}
+
+/**
+ * Since we can't use the "export" keyword here, this console.log prevents
+ * linter "not used" error with top level functions exported here.
+ */
+console.log({ IdeWatch_checkCitizenBaseData, IdeWatch_checkTownBaseData });

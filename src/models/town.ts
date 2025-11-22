@@ -12,15 +12,15 @@
  * limitations under the License.
  */
 
-import {
-  applyStatModifier,
-  CitizenStats,
-  StatModifier,
-  StatMultiplier,
-} from "./stats";
+import { applyStatModifier, CitizenStats, StatModifier, StatMultiplier } from "./stats";
 
-export interface TownHistory {
+type TownCommonData = {
   readonly pandemonium: boolean;
+  readonly poolBuildDay?: number;
+  readonly showerBuildDay?: number;
+};
+
+export type TownBaseData = TownCommonData & {
   readonly gasGunBuildDay?: number;
   readonly guardRoomBuildDay?: number;
   readonly smallTrebuchetBuildDay?: number;
@@ -32,10 +32,9 @@ export interface TownHistory {
   readonly battlementsLevel3UpgradeDay?: number;
   readonly dumpLevel1UpgradeDay?: number;
   readonly dumpLevel2UpgradeDay?: number;
-}
+};
 
-export interface TownContext {
-  readonly pandemonium: boolean;
+export type TownContext = TownCommonData & {
   readonly gasGunBuilt: boolean;
   readonly guardRoomBuilt: boolean;
   readonly smallTrebuchetBuilt: boolean;
@@ -47,47 +46,26 @@ export interface TownContext {
   readonly battlementsUpgradedToLevel3: boolean;
   readonly dumpUpgradedToLevel1: boolean;
   readonly dumpUpgradedToLevel2: boolean;
-}
+};
 
-export function getTownContextFromHistory(
-  history: TownHistory,
-  currentDay: never
-): TownContext {
+export function getTownContextFromBaseData(base: TownBaseData, currentDay: number): TownContext {
   return {
-    pandemonium: history.pandemonium,
-    gasGunBuilt:
-      history.gasGunBuildDay !== undefined &&
-      history.gasGunBuildDay <= currentDay,
-    guardRoomBuilt:
-      history.guardRoomBuildDay !== undefined &&
-      history.guardRoomBuildDay <= currentDay,
-    smallTrebuchetBuilt:
-      history.smallTrebuchetBuildDay !== undefined &&
-      history.smallTrebuchetBuildDay <= currentDay,
+    pandemonium: base.pandemonium,
+    poolBuildDay: base.poolBuildDay,
+    showerBuildDay: base.showerBuildDay,
+    gasGunBuilt: base.gasGunBuildDay !== undefined && base.gasGunBuildDay <= currentDay,
+    guardRoomBuilt: base.guardRoomBuildDay !== undefined && base.guardRoomBuildDay <= currentDay,
+    smallTrebuchetBuilt: base.smallTrebuchetBuildDay !== undefined && base.smallTrebuchetBuildDay <= currentDay,
     automaticSpriklersBuilt:
-      history.automaticSpriklersBuildDay !== undefined &&
-      history.automaticSpriklersBuildDay <= currentDay,
-    petShopBuilt:
-      history.petShopBuildDay !== undefined &&
-      history.petShopBuildDay <= currentDay,
-    filthyGuttersBuilt:
-      history.filthyGuttersBuildDay !== undefined &&
-      history.filthyGuttersBuildDay <= currentDay,
-    swedishWorkshopBuilt:
-      history.swedishWorkshopBuildDay !== undefined &&
-      history.swedishWorkshopBuildDay <= currentDay,
-    manualGrinderBuilt:
-      history.manualGrinderBuildDay !== undefined &&
-      history.manualGrinderBuildDay <= currentDay,
+      base.automaticSpriklersBuildDay !== undefined && base.automaticSpriklersBuildDay <= currentDay,
+    petShopBuilt: base.petShopBuildDay !== undefined && base.petShopBuildDay <= currentDay,
+    filthyGuttersBuilt: base.filthyGuttersBuildDay !== undefined && base.filthyGuttersBuildDay <= currentDay,
+    swedishWorkshopBuilt: base.swedishWorkshopBuildDay !== undefined && base.swedishWorkshopBuildDay <= currentDay,
+    manualGrinderBuilt: base.manualGrinderBuildDay !== undefined && base.manualGrinderBuildDay <= currentDay,
     battlementsUpgradedToLevel3:
-      history.battlementsLevel3UpgradeDay !== undefined &&
-      history.battlementsLevel3UpgradeDay <= currentDay,
-    dumpUpgradedToLevel1:
-      history.dumpLevel1UpgradeDay !== undefined &&
-      history.dumpLevel1UpgradeDay <= currentDay,
-    dumpUpgradedToLevel2:
-      history.dumpLevel2UpgradeDay !== undefined &&
-      history.dumpLevel2UpgradeDay <= currentDay,
+      base.battlementsLevel3UpgradeDay !== undefined && base.battlementsLevel3UpgradeDay <= currentDay,
+    dumpUpgradedToLevel1: base.dumpLevel1UpgradeDay !== undefined && base.dumpLevel1UpgradeDay <= currentDay,
+    dumpUpgradedToLevel2: base.dumpLevel2UpgradeDay !== undefined && base.dumpLevel2UpgradeDay <= currentDay,
   };
 }
 
@@ -112,11 +90,6 @@ export function getSmallTrebuchetMultiplier(town: TownContext): StatMultiplier {
   return town.smallTrebuchetBuilt ? { terror: 0 } : {};
 }
 
-export function getPandemoniumModifier(
-  town: TownContext,
-  survivalChance: number
-): StatModifier {
-  return town.pandemonium && survivalChance < 1
-    ? { survival: -1 + survivalChance }
-    : {};
+export function getPandemoniumModifier(town: TownContext, survivalChance: number): StatModifier {
+  return town.pandemonium && survivalChance < 1 ? { survival: -1 + survivalChance } : {};
 }

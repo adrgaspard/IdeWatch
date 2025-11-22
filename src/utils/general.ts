@@ -11,6 +11,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+export type ReadonlyFixedArray<
+  TItem,
+  Length extends number,
+  Accumulator extends readonly TItem[] = [],
+> = Accumulator["length"] extends Length
+  ? Accumulator
+  : ReadonlyFixedArray<TItem, Length, readonly [...Accumulator, TItem]>;
+
 export function roundTo(n: number, digits?: number): number {
   const negative = n < 0;
   if (digits === undefined) {
@@ -32,10 +41,7 @@ export function bound(n: number, min: number, max: number): number {
   return Math.min(Math.max(n, min), max);
 }
 
-export function getBounded<TData>(
-  array: ReadonlyArray<TData>,
-  index: number
-): TData {
+export function getBounded<TData>(array: ReadonlyArray<TData>, index: number): TData {
   const boundedIndex = bound(index, 0, array.length - 1);
   return array[boundedIndex];
 }

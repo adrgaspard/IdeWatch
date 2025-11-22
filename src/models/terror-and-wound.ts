@@ -11,13 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { bound, roundTo } from "../utils";
+import { bound, roundTo } from "../utils/general";
 import { StatModifier } from "./stats";
 
-export function getBaseTerrorAndWoundModifier(
-  baseSurvivalChance: number,
-  isPandemonium: boolean
-): StatModifier {
+export function getBaseTerrorAndWoundModifier(baseSurvivalChance: number, isPandemonium: boolean): StatModifier {
   const woundRatio = isPandemonium ? 0.3 : 0.2;
   const terrorRatio = isPandemonium ? 0.2 : 0.1;
   const woundChance = baseSurvivalChance - baseSurvivalChance * woundRatio;

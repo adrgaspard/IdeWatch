@@ -16,6 +16,8 @@ import { Status } from "./statuses";
 import { CitizenStats } from "./stats";
 import { SuperLevel } from "./super";
 import { Item } from "./items";
+import { isValueInRange, Range } from "./range";
+import { TownBaseData } from "./town";
 
 export const CitizenBaseStats: CitizenStats = {
   survival: 0.92,
@@ -24,17 +26,79 @@ export const CitizenBaseStats: CitizenStats = {
   terror: 0,
 };
 
-export type CitizenBaseData = {
+type CitizenCommonData = {
   readonly name: string;
-  readonly tag?: string;
+  readonly tag: string;
+  readonly eLevel: SuperLevel;
   readonly sLevel: SuperLevel;
   readonly job: Job;
 };
 
-export type CitizenContext = CitizenBaseData & {
+export type CitizenBaseData = CitizenCommonData & {
+  readonly deathDay?: number;
+  readonly addictionDay?: number;
+  readonly ghoulDays: Range;
+  readonly bathOversightDays: Range;
+  readonly showerOversightDays: Range;
+};
+
+export type CitizenDailyData = {
   readonly previousWatchDays: ReadonlyArray<number>;
-  readonly previousBathDays: ReadonlyArray<number>;
   readonly statuses: ReadonlyArray<Status>;
   readonly items: ReadonlyArray<Item>;
-  readonly tookShowerToday: boolean;
+  readonly drankYesterday: boolean;
 };
+
+export type CitizenContext = CitizenCommonData & {
+  readonly dead: boolean;
+  readonly previousBathDays: ReadonlyArray<number>;
+  readonly tookShowerToday: boolean;
+  readonly previousWatchDays: ReadonlyArray<number>;
+  readonly statuses: ReadonlyArray<Status>;
+  readonly items: ReadonlyArray<Item>;
+};
+
+export function getCitizenContextFromMixedData(
+  base: CitizenBaseData,
+  daily: CitizenDailyData,
+  town: TownBaseData,
+  currentDay: number
+): CitizenContext {
+  const dead = base.deathDay !== undefined ? base.deathDay < currentDay : false;
+  const days: ReadonlyArray<number> = Array.from({ length: currentDay }, (_, i) => i + 1);
+  const statuses = [...daily.statuses];
+  if (isValueInRange(base.ghoulDays, currentDay)) {
+    statuses.push(Status.Ghoul);
+  }
+  if (base.addictionDay !== undefined && base.addictionDay <= currentDay) {
+    statuses.push(Status.Addict);
+  }
+  if (daily.drankYesterday) {
+    statuses.push(Status.Hungover);
+  }
+  return {
+    name: base.name,
+    tag: base.tag,
+    eLevel: base.eLevel,
+    sLevel: base.sLevel,
+    job: base.job,
+    dead: dead,
+    previousWatchDays: daily.previousWatchDays,
+    previousBathDays:
+      town.poolBuildDay !== undefined
+        ? days.filter(
+            day =>
+              day >= town.poolBuildDay! &&
+              (base.deathDay === undefined || base.deathDay >= day) &&
+              !isValueInRange(base.bathOversightDays, day)
+          )
+        : [],
+    statuses: dead ? [] : statuses,
+    items: dead ? [] : daily.items,
+    tookShowerToday:
+      !dead &&
+      town.showerBuildDay !== undefined &&
+      currentDay >= town.showerBuildDay &&
+      !isValueInRange(base.showerOversightDays, currentDay),
+  };
+}

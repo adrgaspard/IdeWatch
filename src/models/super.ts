@@ -1,4 +1,4 @@
-import { getBounded } from "../utils";
+import { getBounded } from "../utils/general";
 import { StatModifier } from "./stats";
 
 /**
@@ -23,6 +23,14 @@ export enum SuperLevel {
   Master = 4,
 }
 
+export const ELevelInventorySizes: Readonly<Record<SuperLevel, number>> = {
+  [SuperLevel.None]: 4,
+  [SuperLevel.Beginner]: 5,
+  [SuperLevel.Apprentice]: 6,
+  [SuperLevel.Expert]: 6,
+  [SuperLevel.Master]: 7,
+};
+
 export const SLevelModifiers: Readonly<Record<SuperLevel, StatModifier>> = {
   [SuperLevel.None]: {},
   [SuperLevel.Beginner]: { defense: 10 },
@@ -31,16 +39,10 @@ export const SLevelModifiers: Readonly<Record<SuperLevel, StatModifier>> = {
   [SuperLevel.Master]: { defense: 10, survival: 0.02 },
 };
 
-const malusBaseEvolution: ReadonlyArray<number> = [
-  0, 0.01, 0.04, 0.09, 0.2, 0.3, 0.42, 0.56, 0.72, 0.9,
-];
-const malusProGuardEvolution: ReadonlyArray<number> = [
-  0, 0.01, 0.04, 0.09, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9,
-];
+const malusBaseEvolution: ReadonlyArray<number> = [0, 0.01, 0.04, 0.09, 0.2, 0.3, 0.42, 0.56, 0.72, 0.9];
+const malusProGuardEvolution: ReadonlyArray<number> = [0, 0.01, 0.04, 0.09, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.75, 0.9];
 
-export const SLevelSurvivalMalusEvolutions: Readonly<
-  Record<SuperLevel, ReadonlyArray<number>>
-> = {
+export const SLevelSurvivalMalusEvolutions: Readonly<Record<SuperLevel, ReadonlyArray<number>>> = {
   [SuperLevel.None]: malusBaseEvolution,
   [SuperLevel.Beginner]: malusBaseEvolution,
   [SuperLevel.Apprentice]: malusBaseEvolution,
@@ -48,14 +50,8 @@ export const SLevelSurvivalMalusEvolutions: Readonly<
   [SuperLevel.Master]: malusProGuardEvolution,
 };
 
-export function getPreviousWatchesModifier(
-  previousWatchesCount: number,
-  sLevel: SuperLevel
-): StatModifier {
+export function getPreviousWatchesModifier(previousWatchesCount: number, sLevel: SuperLevel): StatModifier {
   return {
-    survival: -getBounded(
-      SLevelSurvivalMalusEvolutions[sLevel],
-      previousWatchesCount
-    ),
+    survival: -getBounded(SLevelSurvivalMalusEvolutions[sLevel], previousWatchesCount),
   };
 }

@@ -23,10 +23,7 @@ export type StatModifier = Partial<CitizenStats>;
 
 export type StatMultiplier = Partial<CitizenStats>;
 
-export function applyStatModifier(
-  base: CitizenStats,
-  modifier: StatModifier
-): CitizenStats {
+export function applyStatModifier(base: CitizenStats, modifier: StatModifier): CitizenStats {
   return {
     survival: base.survival + (modifier.survival ?? 0),
     defense: base.defense + (modifier.defense ?? 0),
@@ -35,26 +32,11 @@ export function applyStatModifier(
   };
 }
 
-export function applyStatMultiplier(
-  base: CitizenStats,
-  multiplier: StatMultiplier
-): CitizenStats {
+export function applyStatMultiplier(base: CitizenStats, multiplier: StatMultiplier): CitizenStats {
   return {
-    survival:
-      multiplier.survival === undefined
-        ? base.survival
-        : base.survival * multiplier.survival,
-    defense:
-      multiplier.defense === undefined
-        ? base.defense
-        : base.defense * multiplier.defense,
-    wound:
-      multiplier.wound === undefined
-        ? base.wound
-        : base.wound * multiplier.wound,
-    terror:
-      multiplier.terror === undefined
-        ? base.terror
-        : base.terror * multiplier.terror,
+    survival: multiplier.survival === undefined ? base.survival : base.survival * multiplier.survival,
+    defense: multiplier.defense === undefined ? base.defense : base.defense * multiplier.defense,
+    wound: multiplier.wound === undefined ? base.wound : base.wound * multiplier.wound,
+    terror: multiplier.terror === undefined ? base.terror : base.terror * multiplier.terror,
   };
 }
