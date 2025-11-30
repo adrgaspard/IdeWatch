@@ -15,22 +15,48 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import "./parsers/citizen-parser";
-import { lineInputToCitizenBaseData } from "./parsers/citizen-parser";
-import { columnInputToTownBaseData } from "./parsers/town-parser";
-import { MatrixInput } from "./utils/parsing";
+import { fixedArrayToCitizenBaseData } from "./parsers/citizen-parser";
+import { fixedArrayToTownBaseData } from "./parsers/town-parser";
+import { arrayToWatchSerie } from "./parsers/watch-serie-parser";
+import {
+  CellInput,
+  MatrixInput,
+  columnTo,
+  lineTo,
+  linesToFixedArray,
+  cellToInteger,
+  linesToArray,
+} from "./utils/parsing";
 
 function IdeWatch_checkCitizenBaseData(line: MatrixInput) {
-  lineInputToCitizenBaseData(line);
+  lineTo(line, 10, fixedArrayToCitizenBaseData);
   return "OK";
 }
 
 function IdeWatch_checkTownBaseData(column: MatrixInput) {
-  columnInputToTownBaseData(column);
+  columnTo(column, 14, fixedArrayToTownBaseData);
   return "OK";
+}
+
+function IdeWatch_getCitizensWatchDatas(
+  townBaseDataColumn: MatrixInput,
+  citizensBaseDataLines: MatrixInput,
+  currentDayCell: CellInput,
+  planifiedWatchesLines: MatrixInput,
+  statusesLines: MatrixInput,
+  heavyWeaponsLines: MatrixInput,
+  lightWeaponsLines: MatrixInput
+) {
+  const townBaseData = columnTo(townBaseDataColumn, 14, fixedArrayToTownBaseData);
+  const citizensBaseData = linesToFixedArray(citizensBaseDataLines, 10, fixedArrayToCitizenBaseData);
+  const currentDay = cellToInteger(currentDayCell);
+  const planifiedWatches = linesToArray(planifiedWatchesLines, line => arrayToWatchSerie(line, 1));
 }
 
 /**
  * Since we can't use the "export" keyword here, this console.log prevents
  * linter "not used" error with top level functions exported here.
  */
-console.log({ IdeWatch_checkCitizenBaseData, IdeWatch_checkTownBaseData });
+console.log({
+  "Top level functions": [IdeWatch_checkCitizenBaseData, IdeWatch_checkTownBaseData, IdeWatch_getCitizensWatchDatas],
+});

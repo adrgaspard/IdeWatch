@@ -11,29 +11,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export type CellInput = boolean | number | string;
 
 import { normalizeRange, Range } from "../models/range";
 import { ReadonlyFixedArray } from "./general";
 
-export type MatrixInput = Array<Array<CellInput>>;
+export type CellInput = boolean | number | string;
+export type MatrixInput = ReadonlyArray<ReadonlyArray<CellInput>>;
 
-export type ParsingOptions = Partial<{
-  nullable: boolean;
-}>;
+type CellParser<TResult> = (x: CellInput) => TResult;
 
-export type CellInputParser<TResult> = (x: CellInput) => TResult;
+type CellArrayParser<TResult> = (x: ReadonlyArray<CellInput>) => TResult;
 
-export type CellInputArrayParser<TResult, ParametersCount extends number> = (
+type CellFixedArrayParser<TResult, ParametersCount extends number> = (
   x: ReadonlyFixedArray<CellInput, ParametersCount>
 ) => TResult;
 
 type StringEnumValues<TEnum> = TEnum[keyof TEnum];
 type NumericEnumValues<TEnum> = Extract<TEnum[keyof TEnum], number>;
 
-export function mapCellInput<TIfPresent, TIfEmpty>(
+export function mapCell<TIfPresent, TIfEmpty>(
   x: CellInput,
-  presentFunc: CellInputParser<TIfPresent>,
+  presentFunc: CellParser<TIfPresent>,
   emptyFunc: () => TIfEmpty
 ): TIfPresent | TIfEmpty {
   return x === "" ? emptyFunc() : presentFunc(x);
@@ -47,14 +45,14 @@ export function orThrow<TResult>(errorMessage: string): TResult {
   throw new Error(errorMessage);
 }
 
-export function cellInputToString(cell: CellInput): string {
+export function cellToString(cell: CellInput): string {
   if (!["string", "number", "boolean"].includes(typeof cell)) {
     throw new Error(`${cell} could not be parsed into a string.`);
   }
   return typeof cell === "string" ? cell : `${cell}`;
 }
 
-export function cellInputToNumber(cell: CellInput): number {
+export function cellToNumber(cell: CellInput): number {
   if (typeof cell === "number") return cell;
   if (typeof cell !== "string") throw new Error(`${cell} is not a string, it could not be parsed into a number.`);
   const result = parseFloat(cell);
@@ -62,7 +60,7 @@ export function cellInputToNumber(cell: CellInput): number {
   return result;
 }
 
-export function cellInputToInteger(cell: CellInput): number {
+export function cellToInteger(cell: CellInput): number {
   if (typeof cell !== "string" && typeof cell !== "number") {
     throw new Error(`${cell} is not a string, it could not be parsed into a number.`);
   }
@@ -71,17 +69,17 @@ export function cellInputToInteger(cell: CellInput): number {
   return result;
 }
 
-export function cellInputToBoolean(cell: CellInput): boolean {
+export function cellToBoolean(cell: CellInput): boolean {
   if (typeof cell !== "boolean") throw new Error(`${cell} is not a boolean.`);
   return cell;
 }
 
-export function cellInputToStringEnum<TEnum extends Readonly<Record<string, string>>>(
+export function cellToStringEnum<TEnum extends Readonly<Record<string, string>>>(
   cell: CellInput,
   enumType: TEnum,
   transco?: (value: string) => string
 ): StringEnumValues<TEnum> {
-  const value = transco ? transco(cellInputToString(cell)) : cellInputToString(cell);
+  const value = transco ? transco(cellToString(cell)) : cellToString(cell);
   const enumValues = Object.values(enumType);
   if (!enumValues.includes(value)) {
     throw new Error(`${value} is not inside the requested enum values (${enumValues.join(", ")}).`);
@@ -89,11 +87,11 @@ export function cellInputToStringEnum<TEnum extends Readonly<Record<string, stri
   return value as StringEnumValues<TEnum>;
 }
 
-export function cellInputToNumericEnum<TEnum extends Readonly<Record<string, number | string>>>(
+export function cellToNumericEnum<TEnum extends Readonly<Record<string, number | string>>>(
   cell: CellInput,
   enumType: TEnum
 ): NumericEnumValues<TEnum> {
-  const value = cellInputToNumber(cell);
+  const value = cellToNumber(cell);
   const enumValues = Object.values(enumType).filter(x => typeof x === "number");
   if (!enumValues.includes(value)) {
     throw new Error(`${value} is not inside the requested enum values (${enumValues.join(", ")}).`);
@@ -101,7 +99,7 @@ export function cellInputToNumericEnum<TEnum extends Readonly<Record<string, num
   return value as NumericEnumValues<TEnum>;
 }
 
-export function cellInputToRange(cell: CellInput): Range {
+export function cellToRange(cell: CellInput): Range {
   if (typeof cell === "number") return [{ min: cell, max: cell }];
   if (typeof cell !== "string") {
     throw new Error(`${cell} is not a string or a number, it could not be parsed into a range.`);
@@ -127,7 +125,7 @@ export function cellInputToRange(cell: CellInput): Range {
   return normalizeRange(result);
 }
 
-function ensureMatrixInputCorrect(matrix: MatrixInput): { lineSize: number; linesCount: number } {
+function ensureMatrixIsValid(matrix: MatrixInput): { columnsCount: number; linesCount: number } {
   if (!Array.isArray(matrix) || matrix.length < 1) {
     throw new Error(`${matrix} is not a matrix-like input (no array in first dimension).`);
   }
@@ -144,80 +142,91 @@ function ensureMatrixInputCorrect(matrix: MatrixInput): { lineSize: number; line
       throw new Error(`${matrix} is not a matrix-like input (all lines does not have the same length).`);
     }
   }
-  return { lineSize: subLength!, linesCount: matrix.length };
+  return { columnsCount: subLength!, linesCount: matrix.length };
 }
 
 function transposeMatrix(matrix: MatrixInput): MatrixInput {
   return matrix[0].map((_, col) => matrix.map(row => row[col]));
 }
 
-export function lineInputToArrayOf<TResult>(
-  matrix: MatrixInput,
-  itemFunc: CellInputParser<TResult>
-): ReadonlyArray<TResult> {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
+function ensureLineIsValid(matrix: MatrixInput, desiredLength?: number): ReadonlyArray<CellInput> {
+  const matrixSize = ensureMatrixIsValid(matrix);
   if (matrixSize.linesCount !== 1) throw new Error(`${matrix} is not a line-like input.`);
-  const line = matrix[0];
+  if (desiredLength !== undefined && matrixSize.columnsCount !== desiredLength) {
+    throw new Error(`The line length should be ${desiredLength} (actual: ${matrixSize.columnsCount}).`);
+  }
+  return matrix[0];
+}
+
+function ensureColumnIsValid(matrix: MatrixInput, desiredLength?: number): ReadonlyArray<CellInput> {
+  const matrixSize = ensureMatrixIsValid(matrix);
+  if (matrixSize.columnsCount !== 1) throw new Error(`${matrix} is not a column-like input.`);
+  if (desiredLength !== undefined && matrixSize.linesCount !== desiredLength) {
+    throw new Error(`The column length should be ${desiredLength} (actual: ${matrixSize.linesCount}).`);
+  }
+  return (transposeMatrix(matrix) as unknown as ReadonlyArray<ReadonlyArray<CellInput>>)[0];
+}
+
+export function lineToArray<TResult>(matrix: MatrixInput, itemFunc: CellParser<TResult>): ReadonlyArray<TResult> {
+  const line = ensureLineIsValid(matrix);
   return line.map(itemFunc);
 }
 
-export function columnInputToArrayOf<TResult>(
-  matrix: MatrixInput,
-  itemFunc: CellInputParser<TResult>
-): ReadonlyArray<TResult> {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
-  if (matrixSize.lineSize !== 1) throw new Error(`${matrix} is not a column-like input.`);
-  const column = (transposeMatrix(matrix) as unknown as ReadonlyArray<ReadonlyArray<CellInput>>)[0];
+export function columnToArray<TResult>(matrix: MatrixInput, itemFunc: CellParser<TResult>): ReadonlyArray<TResult> {
+  const column = ensureColumnIsValid(matrix);
   return column.map(itemFunc);
 }
 
-export function lineInputTo<TResult, ParametersCount extends number>(
+export function lineTo<TResult, ParametersCount extends number>(
   matrix: MatrixInput,
   parametersCount: ParametersCount,
-  lineFunc: CellInputArrayParser<TResult, ParametersCount>
+  lineFunc: CellFixedArrayParser<TResult, ParametersCount>
 ): TResult {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
-  if (matrixSize.linesCount !== 1) throw new Error(`${matrix} is not a line-like input.`);
-  if (matrixSize.lineSize !== parametersCount) {
-    throw new Error(`The line size should be ${parametersCount} (actual: ${matrixSize.lineSize}).`);
-  }
-  const line = (matrix as unknown as ReadonlyArray<ReadonlyFixedArray<CellInput, ParametersCount>>)[0];
+  const line = ensureLineIsValid(matrix, parametersCount) as ReadonlyFixedArray<CellInput, ParametersCount>;
   return lineFunc(line);
 }
 
-export function columnInputTo<TResult, ParametersCount extends number>(
+export function columnTo<TResult, ParametersCount extends number>(
   matrix: MatrixInput,
   parametersCount: ParametersCount,
-  columnFunc: CellInputArrayParser<TResult, ParametersCount>
+  columnFunc: CellFixedArrayParser<TResult, ParametersCount>
 ): TResult {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
-  if (matrixSize.lineSize !== 1) throw new Error(`${matrix} is not a column-like input.`);
-  if (matrixSize.linesCount !== parametersCount) {
-    throw new Error(`The line size should be ${parametersCount} (actual: ${matrixSize.linesCount}).`);
-  }
-  const transposed = transposeMatrix(matrix);
-  const column = (transposed as unknown as ReadonlyArray<ReadonlyFixedArray<CellInput, ParametersCount>>)[0];
+  const column = ensureColumnIsValid(matrix, parametersCount) as ReadonlyFixedArray<CellInput, ParametersCount>;
   return columnFunc(column);
 }
 
-export function linesInputToArrayOf<TResult, ParametersCount extends number>(
+export function linesToArray<TResult>(matrix: MatrixInput, lineFunc: CellArrayParser<TResult>): ReadonlyArray<TResult> {
+  ensureMatrixIsValid(matrix);
+  return (matrix as unknown as ReadonlyArray<ReadonlyArray<CellInput>>).map(lineFunc);
+}
+
+export function columnsToArray<TResult>(
+  matrix: MatrixInput,
+  columnFunc: CellArrayParser<TResult>
+): ReadonlyArray<TResult> {
+  ensureMatrixIsValid(matrix);
+  const transposed = transposeMatrix(matrix);
+  return (transposed as unknown as ReadonlyArray<ReadonlyArray<CellInput>>).map(columnFunc);
+}
+
+export function linesToFixedArray<TResult, ParametersCount extends number>(
   matrix: MatrixInput,
   parametersCount: ParametersCount,
-  lineFunc: CellInputArrayParser<TResult, ParametersCount>
+  lineFunc: CellFixedArrayParser<TResult, ParametersCount>
 ): ReadonlyArray<TResult> {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
-  if (matrixSize.lineSize !== parametersCount) {
-    throw new Error(`The line size should be ${parametersCount} (actual: ${matrixSize.lineSize}).`);
+  const matrixSize = ensureMatrixIsValid(matrix);
+  if (matrixSize.columnsCount !== parametersCount) {
+    throw new Error(`The line size should be ${parametersCount} (actual: ${matrixSize.columnsCount}).`);
   }
   return (matrix as unknown as ReadonlyArray<ReadonlyFixedArray<CellInput, ParametersCount>>).map(lineFunc);
 }
 
-export function columnsInputToArrayOf<TResult, ParametersCount extends number>(
+export function columnsToFixedArray<TResult, ParametersCount extends number>(
   matrix: MatrixInput,
   parametersCount: ParametersCount,
-  columnFunc: CellInputArrayParser<TResult, ParametersCount>
+  columnFunc: CellFixedArrayParser<TResult, ParametersCount>
 ): ReadonlyArray<TResult> {
-  const matrixSize = ensureMatrixInputCorrect(matrix);
+  const matrixSize = ensureMatrixIsValid(matrix);
   if (matrixSize.linesCount !== parametersCount) {
     throw new Error(`The column size should be ${parametersCount} (actual: ${matrixSize.linesCount}).`);
   }

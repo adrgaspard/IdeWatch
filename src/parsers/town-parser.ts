@@ -12,30 +12,24 @@
  * limitations under the License.
  */
 import { TownBaseData } from "../models/town";
-import {
-  cellInputToBoolean,
-  cellInputToInteger,
-  columnInputTo,
-  mapCellInput,
-  MatrixInput,
-  orUndefined,
-} from "../utils/parsing";
+import { ReadonlyFixedArray } from "../utils/general";
+import { CellInput, cellToBoolean, cellToInteger, columnTo, mapCell, MatrixInput, orUndefined } from "../utils/parsing";
 
-export function columnInputToTownBaseData(column: MatrixInput): TownBaseData {
-  return columnInputTo(column, 14, fields => ({
-    pandemonium: cellInputToBoolean(fields[0]),
-    gasGunBuildDay: mapCellInput(fields[1], cellInputToInteger, orUndefined),
-    guardRoomBuildDay: mapCellInput(fields[2], cellInputToInteger, orUndefined),
-    smallTrebuchetBuildDay: mapCellInput(fields[3], cellInputToInteger, orUndefined),
-    automaticSpriklersBuildDay: mapCellInput(fields[4], cellInputToInteger, orUndefined),
-    petShopBuildDay: mapCellInput(fields[5], cellInputToInteger, orUndefined),
-    filthyGuttersBuildDay: mapCellInput(fields[6], cellInputToInteger, orUndefined),
-    swedishWorkshopBuildDay: mapCellInput(fields[7], cellInputToInteger, orUndefined),
-    manualGrinderBuildDay: mapCellInput(fields[8], cellInputToInteger, orUndefined),
-    poolBuildDay: mapCellInput(fields[9], cellInputToInteger, orUndefined),
-    showerBuildDay: mapCellInput(fields[10], cellInputToInteger, orUndefined),
-    battlementsLevel3UpgradeDay: mapCellInput(fields[11], cellInputToInteger, orUndefined),
-    dumpLevel1UpgradeDay: mapCellInput(fields[12], cellInputToInteger, orUndefined),
-    dumpLevel2UpgradeDay: mapCellInput(fields[13], cellInputToInteger, orUndefined),
-  }));
+export function fixedArrayToTownBaseData(fields: ReadonlyFixedArray<CellInput, 14>) {
+  return {
+    pandemonium: cellToBoolean(fields[0]),
+    gasGunBuildDay: mapCell(fields[1], cellToInteger, orUndefined),
+    guardRoomBuildDay: mapCell(fields[2], cellToInteger, orUndefined),
+    smallTrebuchetBuildDay: mapCell(fields[3], cellToInteger, orUndefined),
+    automaticSpriklersBuildDay: mapCell(fields[4], cellToInteger, orUndefined),
+    petShopBuildDay: mapCell(fields[5], cellToInteger, orUndefined),
+    filthyGuttersBuildDay: mapCell(fields[6], cellToInteger, orUndefined),
+    swedishWorkshopBuildDay: mapCell(fields[7], cellToInteger, orUndefined),
+    manualGrinderBuildDay: mapCell(fields[8], cellToInteger, orUndefined),
+    poolBuildDay: mapCell(fields[9], cellToInteger, orUndefined),
+    showerBuildDay: mapCell(fields[10], cellToInteger, orUndefined),
+    battlementsLevel3UpgradeDay: mapCell(fields[11], cellToInteger, orUndefined),
+    dumpLevel1UpgradeDay: mapCell(fields[12], cellToInteger, orUndefined),
+    dumpLevel2UpgradeDay: mapCell(fields[13], cellToInteger, orUndefined),
+  };
 }

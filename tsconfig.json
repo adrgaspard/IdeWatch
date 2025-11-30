@@ -6,7 +6,7 @@
     "moduleResolution": "node",
     "outDir": "dist",
     "rootDir": ".",
-    "types": ["node"],
+    "types": ["node", "google-apps-script"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,

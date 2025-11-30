@@ -14,17 +14,19 @@
 import { CitizenBaseData } from "../models/citizens";
 import { Job } from "../models/jobs";
 import { SuperLevel } from "../models/super";
+import { ReadonlyFixedArray } from "../utils/general";
 import {
   MatrixInput,
-  lineInputTo,
-  cellInputToString,
-  cellInputToNumericEnum,
-  cellInputToStringEnum,
-  mapCellInput,
-  cellInputToNumber,
+  lineTo,
+  cellToString,
+  cellToNumericEnum,
+  cellToStringEnum,
+  mapCell,
+  cellToNumber,
   orUndefined,
-  cellInputToRange,
+  cellToRange,
   orThrow,
+  CellInput,
 } from "../utils/parsing";
 
 function getGlobalizedJobName(value: string): string {
@@ -43,17 +45,17 @@ function getGlobalizedJobName(value: string): string {
   }
 }
 
-export function lineInputToCitizenBaseData(line: MatrixInput): CitizenBaseData {
-  return lineInputTo(line, 10, fields => ({
-    name: mapCellInput(fields[0], cellInputToString, () => orThrow("Citizen name should be filled.")),
-    tag: mapCellInput(fields[1], cellInputToString, () => orThrow("Citizen tag should be filled.")),
-    eLevel: cellInputToNumericEnum(fields[2], SuperLevel),
-    sLevel: cellInputToNumericEnum(fields[3], SuperLevel),
-    job: cellInputToStringEnum(fields[4], Job, getGlobalizedJobName),
-    deathDay: mapCellInput(fields[5], cellInputToNumber, orUndefined),
-    dependanceDay: mapCellInput(fields[6], cellInputToNumber, orUndefined),
-    ghoulDays: cellInputToRange(fields[7]),
-    bathOversightDays: cellInputToRange(fields[8]),
-    showerOversightDays: cellInputToRange(fields[9]),
-  }));
+export function fixedArrayToCitizenBaseData(fields: ReadonlyFixedArray<CellInput, 10>) {
+  return {
+    name: mapCell(fields[0], cellToString, () => orThrow("Citizen name should be filled.")),
+    tag: mapCell(fields[1], cellToString, () => orThrow("Citizen tag should be filled.")),
+    eLevel: cellToNumericEnum(fields[2], SuperLevel),
+    sLevel: cellToNumericEnum(fields[3], SuperLevel),
+    job: cellToStringEnum(fields[4], Job, getGlobalizedJobName),
+    deathDay: mapCell(fields[5], cellToNumber, orUndefined),
+    dependanceDay: mapCell(fields[6], cellToNumber, orUndefined),
+    ghoulDays: cellToRange(fields[7]),
+    bathOversightDays: cellToRange(fields[8]),
+    showerOversightDays: cellToRange(fields[9]),
+  };
 }
