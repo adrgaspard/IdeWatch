@@ -41,6 +41,14 @@ export function orUndefined(): undefined {
   return undefined;
 }
 
+export function orFalse(): false {
+  return false;
+}
+
+export function orZero(): 0 {
+  return 0;
+}
+
 export function orThrow<TResult>(errorMessage: string): TResult {
   throw new Error(errorMessage);
 }

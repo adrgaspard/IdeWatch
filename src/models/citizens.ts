@@ -46,7 +46,7 @@ export type CitizenDailyData = {
   readonly previousWatchDays: ReadonlyArray<number>;
   readonly statuses: ReadonlyArray<Status>;
   readonly items: ReadonlyArray<Item>;
-  readonly drankYesterday: boolean;
+  // readonly drankYesterday: boolean;
 };
 
 export type CitizenContext = CitizenCommonData & {
@@ -73,9 +73,9 @@ export function getCitizenContextFromMixedData(
   if (base.addictionDay !== undefined && base.addictionDay <= currentDay) {
     statuses.push(Status.Addict);
   }
-  if (daily.drankYesterday) {
-    statuses.push(Status.Hungover);
-  }
+  // if (daily.drankYesterday) {
+  //   statuses.push(Status.Hungover);
+  // }
   return {
     name: base.name,
     tag: base.tag,

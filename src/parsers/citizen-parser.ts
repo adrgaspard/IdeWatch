@@ -11,13 +11,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CitizenBaseData } from "../models/citizens";
 import { Job } from "../models/jobs";
 import { SuperLevel } from "../models/super";
 import { ReadonlyFixedArray } from "../utils/general";
 import {
-  MatrixInput,
-  lineTo,
   cellToString,
   cellToNumericEnum,
   cellToStringEnum,
@@ -47,8 +44,8 @@ function getGlobalizedJobName(value: string): string {
 
 export function fixedArrayToCitizenBaseData(fields: ReadonlyFixedArray<CellInput, 10>) {
   return {
-    name: mapCell(fields[0], cellToString, () => orThrow("Citizen name should be filled.")),
-    tag: mapCell(fields[1], cellToString, () => orThrow("Citizen tag should be filled.")),
+    name: mapCell<string, string>(fields[0], cellToString, () => orThrow("Citizen name should be filled.")),
+    tag: mapCell<string, string>(fields[1], cellToString, () => orThrow("Citizen tag should be filled.")),
     eLevel: cellToNumericEnum(fields[2], SuperLevel),
     sLevel: cellToNumericEnum(fields[3], SuperLevel),
     job: cellToStringEnum(fields[4], Job, getGlobalizedJobName),

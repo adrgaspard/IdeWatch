@@ -11,10 +11,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Status } from "../models/statuses";
+import { ReadonlyFixedArray } from "../utils/general";
 import { CellInput, cellToBoolean, mapCell, orFalse } from "../utils/parsing";
 
-export function arrayToWatchSerie(elements: ReadonlyArray<CellInput>, firstDay: number): ReadonlyArray<number> {
-  const watchArray = elements.map(x => mapCell(x, cellToBoolean, orFalse));
-  const watchSerie = watchArray.map((watched, i) => (watched ? i + firstDay : undefined));
-  return watchSerie.filter(day => day !== undefined);
+const StatusesOrder: ReadonlyFixedArray<Status, 12> = [
+  Status.Drunk,
+  Status.Thirst,
+  Status.Dehydratation,
+  Status.Terror,
+  Status.Drugged,
+  Status.Infection,
+  Status.Wound,
+  Status.Hungover,
+  Status.Healed,
+  Status.Immune,
+  Status.TamerGuard,
+  Status.TamerGuardSteak,
+];
+
+export function fixedArrayToStatusesArray(fields: ReadonlyFixedArray<CellInput, 12>) {
+  return fields
+    .map(x => mapCell(x, cellToBoolean, orFalse))
+    .map((value, index) => (value ? StatusesOrder[index] : undefined))
+    .filter(x => x !== undefined);
 }

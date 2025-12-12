@@ -39,6 +39,39 @@ export type Item = {
 };
 
 export const Items = {
+  Manbag: {
+    nameEn: "Manbag",
+    nameFr: "Sac supplémentaire",
+    miniNameEn: "Bag",
+    miniNameFr: "Sac supp",
+    id: "item_bag",
+    heavy: false,
+    defense: 0,
+    survivalBonus: 0,
+    boost: undefined,
+  },
+  UltraRucksack: {
+    nameEn: "Ultra-Rucksack",
+    nameFr: "Sac super-pratique",
+    miniNameEn: "Bag XL",
+    miniNameFr: "Super sac",
+    id: "item_bagxl",
+    heavy: false,
+    defense: 0,
+    survivalBonus: 0,
+    boost: undefined,
+  },
+  PocketBelt: {
+    nameEn: "Utility belt",
+    nameFr: "Ceinture à poches",
+    miniNameEn: "Belt",
+    miniNameFr: "Ceinture",
+    id: "item_pocket_belt",
+    heavy: false,
+    defense: 0,
+    survivalBonus: 0,
+    boost: undefined,
+  },
   AdjustableSpanner: {
     nameEn: "Adjustable Spanner",
     nameFr: "Clé à Molette",

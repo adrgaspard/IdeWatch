@@ -11,9 +11,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { TownBaseData } from "../models/town";
 import { ReadonlyFixedArray } from "../utils/general";
-import { CellInput, cellToBoolean, cellToInteger, columnTo, mapCell, MatrixInput, orUndefined } from "../utils/parsing";
+import { CellInput, cellToBoolean, cellToInteger, mapCell, orUndefined } from "../utils/parsing";
 
 export function fixedArrayToTownBaseData(fields: ReadonlyFixedArray<CellInput, 14>) {
   return {

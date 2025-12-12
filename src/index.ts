@@ -14,10 +14,14 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import "./parsers/citizen-parser";
+import { getCitizenStats } from "./behaviors/citizen-stats";
+import { getCitizenContextFromMixedData } from "./models/citizens";
+import { getTownContextFromBaseData } from "./models/town";
 import { fixedArrayToCitizenBaseData } from "./parsers/citizen-parser";
+import { fixedArrayToStatusesArray } from "./parsers/statuses-parser";
 import { fixedArrayToTownBaseData } from "./parsers/town-parser";
 import { arrayToWatchSerie } from "./parsers/watch-serie-parser";
+import { fixedArrayToHeavyWeaponsArray, fixedArrayToLightWeaponsArray } from "./parsers/weapons-parser";
 import {
   CellInput,
   MatrixInput,
@@ -47,10 +51,45 @@ function IdeWatch_getCitizensWatchDatas(
   heavyWeaponsLines: MatrixInput,
   lightWeaponsLines: MatrixInput
 ) {
+  // Step 1 : fetch citizen inputs from sheets
   const townBaseData = columnTo(townBaseDataColumn, 14, fixedArrayToTownBaseData);
   const citizensBaseData = linesToFixedArray(citizensBaseDataLines, 10, fixedArrayToCitizenBaseData);
   const currentDay = cellToInteger(currentDayCell);
   const planifiedWatches = linesToArray(planifiedWatchesLines, line => arrayToWatchSerie(line, 1));
+  const statuses = Array.isArray(statusesLines)
+    ? linesToFixedArray(statusesLines, 12, fixedArrayToStatusesArray)
+    : Array(40).fill(Array(12).fill(false));
+  const heavyWeapons = Array.isArray(heavyWeaponsLines)
+    ? linesToFixedArray(heavyWeaponsLines, 15, fixedArrayToHeavyWeaponsArray)
+    : Array(40).fill(Array(15).fill(false));
+  const lightWeapons = lightWeaponsLines
+    ? linesToFixedArray(lightWeaponsLines, 32, fixedArrayToLightWeaponsArray)
+    : Array(40).fill(Array(32).fill(0));
+
+  // Step 2 : aggregate inputs
+  const townContext = getTownContextFromBaseData(townBaseData, currentDay);
+  const citizenDailyDatas = planifiedWatches.map((watches, index) => ({
+    previousWatchDays: watches,
+    statuses: statuses[index],
+    items: heavyWeapons[index].concat(lightWeapons[index]),
+  }));
+  const citizensContext = citizensBaseData.map((base, index) =>
+    getCitizenContextFromMixedData(base, citizenDailyDatas[index], townContext, currentDay)
+  );
+
+  // Step 3 : compute citizens data
+  const citizenStats = citizensContext.map(citizen => getCitizenStats(townContext, citizen));
+
+  // Step 4 : format data for output
+  return [
+    citizenStats.map(x => x.baseSurvival),
+    citizenStats.map(x => x.survival),
+    citizenStats.map(x => x.wound),
+    citizenStats.map(x => x.terror),
+    citizenStats.map(x => x.defense),
+  ]
+    .flat()
+    .map(x => [x]);
 }
 
 /**

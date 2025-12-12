@@ -23,7 +23,7 @@ import { roundTo } from "../utils/general";
 import { StatusModifiers } from "../models/statuses";
 import { getItemModifier } from "../models/items";
 
-export function getCitizenStats(town: TownContext, citizen: CitizenContext): CitizenStats {
+export function getCitizenStats(town: TownContext, citizen: CitizenContext) {
   let stats: CitizenStats = { ...CitizenBaseStats };
 
   // Step 1 : Apply job modifier
@@ -44,6 +44,7 @@ export function getCitizenStats(town: TownContext, citizen: CitizenContext): Cit
       SLevelSurvivalMalusEvolutions[citizen.sLevel]
     )
   );
+  let baseStats = { ...stats };
 
   // Step 5 : Apply items modifier
   for (const item of citizen.items) {
@@ -63,17 +64,19 @@ export function getCitizenStats(town: TownContext, citizen: CitizenContext): Cit
 
   // Step 9 : Apply pandemonium modifier
   stats = applyStatModifier(stats, getPandemoniumModifier(town, stats.survival));
+  baseStats = applyStatModifier(baseStats, getPandemoniumModifier(town, baseStats.survival));
 
   // Step 10 : Apply super level modifier
   stats = applyStatModifier(stats, SLevelModifiers[citizen.sLevel]);
+  baseStats = applyStatModifier(baseStats, SLevelModifiers[citizen.sLevel]);
 
   // Step 11 : Apply small trebuchet multiplier
   stats = applyStatMultiplier(stats, getSmallTrebuchetMultiplier(town));
 
   // Step 12 : Round survival chance
-  stats = {
+  return {
     ...stats,
     survival: roundTo(stats.survival, 4),
+    baseSurvival: baseStats.survival,
   };
-  return stats;
 }
