@@ -30,6 +30,7 @@ import {
   linesToFixedArray,
   cellToInteger,
   linesToArray,
+  mapMatrix,
 } from "./utils/parsing";
 
 function IdeWatch_checkCitizenBaseData(line: MatrixInput) {
@@ -56,15 +57,21 @@ function IdeWatch_getCitizensWatchDatas(
   const citizensBaseData = linesToFixedArray(citizensBaseDataLines, 10, fixedArrayToCitizenBaseData);
   const currentDay = cellToInteger(currentDayCell);
   const planifiedWatches = linesToArray(planifiedWatchesLines, line => arrayToWatchSerie(line, 1));
-  const statuses = Array.isArray(statusesLines)
-    ? linesToFixedArray(statusesLines, 12, fixedArrayToStatusesArray)
-    : Array(40).fill(Array(12).fill(false));
-  const heavyWeapons = Array.isArray(heavyWeaponsLines)
-    ? linesToFixedArray(heavyWeaponsLines, 15, fixedArrayToHeavyWeaponsArray)
-    : Array(40).fill(Array(15).fill(false));
-  const lightWeapons = lightWeaponsLines
-    ? linesToFixedArray(lightWeaponsLines, 32, fixedArrayToLightWeaponsArray)
-    : Array(40).fill(Array(32).fill(0));
+  const statuses = mapMatrix(
+    statusesLines,
+    () => linesToFixedArray(statusesLines, 12, fixedArrayToStatusesArray),
+    () => Array(citizensBaseData.length).fill([])
+  );
+  const heavyWeapons = mapMatrix(
+    heavyWeaponsLines,
+    () => linesToFixedArray(heavyWeaponsLines, 15, fixedArrayToHeavyWeaponsArray),
+    () => Array(citizensBaseData.length).fill([])
+  );
+  const lightWeapons = mapMatrix(
+    lightWeaponsLines,
+    () => linesToFixedArray(lightWeaponsLines, 32, fixedArrayToLightWeaponsArray),
+    () => Array(citizensBaseData.length).fill([])
+  );
 
   // Step 2 : aggregate inputs
   const townContext = getTownContextFromBaseData(townBaseData, currentDay);

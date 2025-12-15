@@ -53,7 +53,10 @@ export function getCitizenStats(town: TownContext, citizen: CitizenContext) {
 
   // Step 6 : Apply statuses modifier
   for (const status of citizen.statuses) {
-    stats = applyStatModifier(stats, StatusModifiers[status]);
+    const statusModifier = StatusModifiers[status];
+    if (statusModifier !== undefined) {
+      stats = applyStatModifier(stats, StatusModifiers[status]);
+    }
   }
 
   // Step 7 : Apply buildings modifier

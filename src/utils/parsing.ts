@@ -18,6 +18,8 @@ import { ReadonlyFixedArray } from "./general";
 export type CellInput = boolean | number | string;
 export type MatrixInput = ReadonlyArray<ReadonlyArray<CellInput>>;
 
+type MatrixParser<TResult> = (x: MatrixInput) => TResult;
+
 type CellParser<TResult> = (x: CellInput) => TResult;
 
 type CellArrayParser<TResult> = (x: ReadonlyArray<CellInput>) => TResult;
@@ -35,6 +37,14 @@ export function mapCell<TIfPresent, TIfEmpty>(
   emptyFunc: () => TIfEmpty
 ): TIfPresent | TIfEmpty {
   return x === "" ? emptyFunc() : presentFunc(x);
+}
+
+export function mapMatrix<TIfPresent, TIfEmpty>(
+  x: MatrixInput,
+  presentFunc: MatrixParser<TIfPresent>,
+  emptyFunc: () => TIfEmpty
+): TIfPresent | TIfEmpty {
+  return Array.isArray(x) ? presentFunc(x) : emptyFunc();
 }
 
 export function orUndefined(): undefined {
